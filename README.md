@@ -32,17 +32,19 @@ CLIENT_PASSWORD="senhaDeAcessoDoCliente"
 
 PS.: Usaremos os dados do desenvolvedor para notificá-lo caso algum usuário encontre alguma dificuldade com o sistema
 
-### Criação das tabelas:
+## Tabelas
+### Criar:
 ```sh
 php artisan migrate
 ```
 
-### Populando as tabelas:
+### Popular:
 ```sh
 php artisan db:seed
 ```
 
-## Rodando o sistema
+## Sistema
+### Rodar:
 ```sh
 npm install && npm run dev
 ```
@@ -50,4 +52,6 @@ npm install && npm run dev
 php artisan serve
 ```
 
-[Acesse o sistema](http://127.0.0.1:8000/)
+## Acessar:
+[sistema](http://127.0.0.1:8000/)
+[api](http://127.0.0.1:8000/api/carros)
