@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Helpers\Checa;
 use App\Helpers\Trata;
 use Closure;
 use Illuminate\Http\Request;
@@ -19,10 +20,16 @@ class ChecaSeEAdmin
     public function handle(Request $request, Closure $next)
     {
         try {
-            $isAdmin = Auth::user()->is_admin;
-    
+            $user = Auth::user();
+            $isAdmin = $user->is_admin || $user->is_dev;
+            
             if ($isAdmin) return $next($request);
-            else return response("Acesso negado", 403);
+            else {
+                $api = Checa::middleware('api');
+                return $api
+                    ? response('Acesso negado', 403) 
+                    : redirect()->back()->with("error", "Acesso negado!");
+            }
         } catch (\Throwable $th) {
             throw $th;
         }

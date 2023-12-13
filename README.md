@@ -54,4 +54,8 @@ php artisan serve
 
 ### Acessar:
 [sistema](http://127.0.0.1:8000/)
-[api](http://127.0.0.1:8000/api/carros)
+#### API:
+Rotas públicas:
+[carros](http://127.0.0.1:8000/api/carros)
+Rotas administrativas:
+[usuários](http://127.0.0.1:8000/api/admin/users)
