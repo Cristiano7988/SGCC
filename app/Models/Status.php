@@ -9,4 +9,9 @@ class Status extends Model
 {
     use HasFactory;
     protected $table = 'status';
+
+    public function carros()
+    {
+        return $this->hasMany(Carro::class);
+    }
 }
