@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CarroController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +15,22 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+
+    Route::prefix('carros')->group(function() {
+        Route::post('/', [CarroController::class, 'store']);
+        Route::prefix('{carro}')->group(function () {
+            Route::put('/', [CarroController::class, 'update']);
+            Route::delete('/', [CarroController::class, 'destroy']);
+        });
+    });
+});
+
+// Rotas públicas
+Route::prefix('carros')->group(function() {
+    Route::get('/', [CarroController::class, 'index']);
+    Route::get('/{carro}', [CarroController::class, 'show']);
 });
