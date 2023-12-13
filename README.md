@@ -44,6 +44,9 @@ php artisan db:seed
 
 ## Rodando o sistema
 ```sh
+npm install && npm run dev
+```
+```sh
 php artisan serve
 ```
 
