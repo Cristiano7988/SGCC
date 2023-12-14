@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Checa;
 use App\Models\Carro;
+use App\Models\Status;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -49,10 +51,17 @@ class CarroController extends Controller
     public function index()
     {
         try {
-            $carros = Carro::query();
-            $carros = $carros->paginate();
+            extract(request()->all());
 
-            return response($carros);
+            $carros = Carro::query();
+            $perPage = $perPage ?? 10;
+            $carros = $carros->paginate($perPage);
+
+            $api = Checa::middleware('api');
+
+            return $api
+                ? response($carros)
+                : view('auth.admin.carros.index', compact('carros'));
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -65,7 +74,12 @@ class CarroController extends Controller
      */
     public function create()
     {
-        //
+        try {
+            $estados = Status::all();
+            return view('auth.admin.carros.create', compact('estados'));
+        } catch (\Throwable $th) {
+            throw $th;
+        }
     }
 
     /**
@@ -77,13 +91,21 @@ class CarroController extends Controller
     public function store(Request $request)
     {
         try {
+            $api = Checa::middleware('api');
+
             // Aqui validamos os dados
             $validator = $this->validator($request->all());
-            if ($validator->fails()) return response($validator->errors(), 422);
+            if ($validator->fails()) return $api
+                ? response($validator->errors(), 422)
+                : redirect()->back()->withErrors($validator);
 
             // Aqui criamos o carro
             $carro = Carro::create($request->all());
-            return response($carro);
+            $mensagem = "Carro modelo {$carro->modelo} adicionado.";
+
+            return $api
+                ? response($mensagem)
+                : redirect()->route('list-carros')->with('success', $mensagem);
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -98,6 +120,14 @@ class CarroController extends Controller
     public function show(Carro $carro)
     {
         try {
+            $api = Checa::middleware('api');
+
+            $carro->preco = 'R$' . ' ' . number_format($carro->preco, 2, ',', '');
+
+            return $api
+                ? response($carro)
+                : view('auth.admin.carros.show', compact('carro'));
+            
             return response($carro);
         } catch (\Throwable $th) {
             throw $th;
@@ -112,7 +142,10 @@ class CarroController extends Controller
      */
     public function edit(Carro $carro)
     {
-        //
+        $dados['carro'] = $carro;
+        $dados['estados'] = Status::all();
+
+        return view('auth.admin.carros.edit', $dados);
     }
 
     /**
@@ -125,13 +158,20 @@ class CarroController extends Controller
     public function update(Request $request, Carro $carro)
     {
         try {
+            $api = Checa::middleware('api');
+
             // Aqui validamos os dados
             $validator = $this->validator($request->all(), $carro);
-            if ($validator->fails()) return response($validator->errors(), 422);
+            if ($validator->fails()) return $api
+                ? response($validator->errors(), 422)
+                : redirect()->back()->withErrors($validator);
             
             $carro->update($request->all());
+            $mensagem = "O carro {$carro->modelo} foi alterado.";
 
-            return response($carro);
+            return $api
+                ? response($mensagem)
+                : redirect()->route('show-carro', $carro->id)->with('success', $mensagem);
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -146,9 +186,13 @@ class CarroController extends Controller
     public function destroy(Carro $carro)
     {
         try {
+            $api = Checa::middleware('api');
             $carro->delete();
-            
-            return response("O carro nº #{$carro->id} de modelo {$carro->modelo} foi deletado.");
+            $mensagem = "O carro nº #{$carro->id} de modelo {$carro->modelo} foi deletado.";
+
+            return $api
+                ? response($mensagem)
+                : redirect()->route('list-carros')->with('success', $mensagem);
         } catch (\Throwable $th) {
             throw $th;
         }

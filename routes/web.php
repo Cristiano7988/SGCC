@@ -39,10 +39,12 @@ Route::middleware('auth:sanctum')->group(function () {
             });
     
             Route::prefix('carros')->group(function () {
-                Route::post('/', [CarroController::class, 'store']);
+                Route::get('/create', [CarroController::class, 'create'])->name('create-carro');
+                Route::post('/', [CarroController::class, 'store'])->name('store-carro');
                 Route::prefix('{carro}')->group(function () {
-                    Route::put('/', [CarroController::class, 'update']);
-                    Route::delete('/', [CarroController::class, 'destroy']);
+                    Route::get('/', [CarroController::class, 'edit'])->name('edit-carro');
+                    Route::put('/', [CarroController::class, 'update'])->name('update-carro');
+                    Route::delete('/', [CarroController::class, 'destroy'])->name('destroy-carro');
                 });
             });
         });
@@ -54,4 +56,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/', [UserController::class, 'update'])->name('update-user');
         Route::get('/edit', [UserController::class, 'edit'])->name('edit-user');
     });
+});
+
+// Rotas públicas
+Route::prefix('carros')->group(function () {
+    Route::get('/', [CarroController::class, 'index'])->name('list-carros');
+    Route::get('/{carro}', [CarroController::class, 'show'])->name('show-carro');
 });
