@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -22,9 +23,9 @@ class UserController extends Controller
         $requiredIfNew = $user ? 'nullable' : 'required';
         return Validator::make($data, [
             'name' => [$requiredIfNew, 'string', 'max:255'],
-            'email' => [$requiredIfNew, 'string', 'email', 'max:255', 'unique:users'],
+            'email' => [$requiredIfNew, 'string', 'email', 'max:255', $user ? Rule::unique('users')->ignore($user->id) : 'unique:users'],
             'is_admin' => ['boolean', 'declined_if:is_admin,true'],
-            'password' => [$requiredIfNew, 'string', 'min:8', 'confirmed'],
+            'password' => [$requiredIfNew, 'string', 'min:8', 'confirmed', ],
         ]);
     }
 
@@ -36,14 +37,31 @@ class UserController extends Controller
     public function index()
     {
         try {
+            extract(request()->all());
             $users = User::query();
-            $users = $users->paginate();
+            
+            $perPage = $perPage ?? 10;
+            $users = $users->paginate($perPage);
             
             $api = Checa::middleware('api');
 
             return $api
                 ? response($users)
-                : view('');
+                : view('auth.admin.users.index', compact('users'));
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \App\Models\User
+     */
+    protected function create()
+    {
+        try {
+            return view('auth.admin.users.create');
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -58,16 +76,19 @@ class UserController extends Controller
     protected function store(Request $request)
     {
         try {
+            $api = Checa::middleware('api');
+
             // Aqui validamos os dados
             $validator = $this->validator($request->all());
-            if ($validator->fails()) return response($validator->errors(), 422);
+            if ($validator->fails()) return $api
+             ? response($validator->errors(), 422)
+             : redirect()->back()->withErrors($validator);;
 
             $request['is_admin'] = true;
             $request['password'] = Hash::make($request['password']);
 
             $newUser = User::create($request->all());
 
-            $api = Checa::middleware('api');
             $mensagem = "Usuário admin {$newUser->name} adicionado.";
 
             return $api
@@ -90,13 +111,24 @@ class UserController extends Controller
             $api = Checa::middleware('api');
             return $api
                 ? response($user)
-                : view('');
+                : view('auth.admin.users.show', compact('user'));
         } catch(\Throwable $th) {
             throw $th;
         }
     }
 
-        /**
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Http\Response
+     */
+    public function edit(User $user)
+    {
+        return view('auth.admin.users.edit', compact('user'));
+    }
+
+    /**
      * Update an user.
      *
      * @param  User  $user
@@ -106,19 +138,24 @@ class UserController extends Controller
     protected function update(User $user, Request $request)
     {
         try {
+            $api = Checa::middleware('api');
+            
             // Aqui validamos os dados da requisição
             $validator = $this->validator($request->all(), $user);
-            if ($validator->fails()) return response($validator->errors(), 422);
+            if ($validator->fails()) return $api
+                ? response($validator->errors(), 422)
+                : redirect()->back()->withErrors($validator);
 
-            if (!!$request['password']) $request['password'] = Hash::make($request['password']);
+            if ($request['password']) $request['password'] = Hash::make($request['password']);
+            else unset($request['password']);
+            
             $user->update($request->all());
 
-            $api = Checa::middleware('api');
             $mensagem = "O usuário {$user->name} foi alterado.";
     
             return $api
                 ? response($mensagem)
-                : redirect()->back()->with('success', $mensagem);
+                : redirect()->route("show-user", $user->id)->with('success', $mensagem);
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -140,7 +177,7 @@ class UserController extends Controller
 
             return $api
                 ? response($mensagem)
-                : redirect()->back()-with('success', $mensagem);
+                : redirect()->route('list-users')->with('success', $mensagem);
             } catch (\Throwable $th) {
             throw $th;
         }

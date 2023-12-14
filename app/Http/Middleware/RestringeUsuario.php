@@ -7,7 +7,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class ChecaSeEAdmin
+class RestringeUsuario
 {
     /**
      * Handle an incoming request.
@@ -21,10 +21,12 @@ class ChecaSeEAdmin
         try {
             $user = Auth::user();
             $isAdmin = $user->is_admin || $user->is_dev;
+            $userFromTheRoute = $request->route()->user;
             
-            if ($isAdmin) return $next($request);
+            if ($isAdmin || $user->id === $userFromTheRoute->id) return $next($request);
             else {
                 $api = Checa::middleware('api');
+
                 return $api
                     ? response('Acesso negado', 403) 
                     : redirect()->back()->with("error", "Acesso negado!");

@@ -58,6 +58,14 @@
                                 </a>
 
                                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{{ route('show-user', Auth::user()->id) }}">
+                                        {{ __('Perfil') }}
+                                    </a>
+                                    @if (Auth::user()->is_admin || Auth::user()->is_dev)
+                                    <a class="dropdown-item" href="{{ route('list-users') }}">
+                                        {{ __('Usuários') }}
+                                    </a>
+                                    @endif
                                     <a class="dropdown-item" href="{{ route('logout') }}"
                                        onclick="event.preventDefault();
                                                      document.getElementById('logout-form').submit();">
@@ -67,6 +75,7 @@
                                     <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                                         @csrf
                                     </form>
+                                    </div>
                                 </div>
                             </li>
                         @endguest
@@ -77,6 +86,11 @@
         @if (session('error'))
             <div class="alert alert-danger" role="alert">
                 {{ session('error') }}
+            </div>
+        @endif
+        @if (session('success'))
+            <div class="alert alert-success" role="alert">
+                {{ session('success') }}
             </div>
         @endif
         <main class="py-4">
