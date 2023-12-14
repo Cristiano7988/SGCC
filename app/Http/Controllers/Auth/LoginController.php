@@ -56,7 +56,7 @@ class LoginController extends Controller
         ]);
     }
 
-    protected function login(Request $request)
+    protected function loginViaApi(Request $request)
     {
         try {
             // Aqui validamos os dados da requisição
